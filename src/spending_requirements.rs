@@ -4,7 +4,7 @@ use bitcoin::key::TweakedPublicKey;
 use bitcoin::opcodes::all::OP_PUSHBYTES_20;
 use bitcoin::secp256k1::Message;
 use bitcoin::sighash::SighashCache;
-use bitcoin::taproot::{ControlBlock, LeafVersion};
+use bitcoin::taproot::ControlBlock;
 use bitcoin::{
     secp256k1, CompressedPublicKey, Script, ScriptBuf, TapLeafHash, Transaction, TxOut,
     WitnessProgram, XOnlyPublicKey,
@@ -179,7 +179,7 @@ impl P2TRChecker {
             prevouts: prevouts.to_vec(),
             input_idx,
             taproot_annex_scriptleaf: Some((
-                TapLeafHash::from_script(script, LeafVersion::TapScript),
+                TapLeafHash::from_script(script, control_block.leaf_version),
                 annex,
             )),
         };
