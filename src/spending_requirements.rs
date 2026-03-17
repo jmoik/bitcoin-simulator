@@ -5,12 +5,13 @@ use bitcoin::opcodes::all::OP_PUSHBYTES_20;
 use bitcoin::secp256k1::Message;
 use bitcoin::sighash::SighashCache;
 use bitcoin::taproot::ControlBlock;
+use bitcoin::taproot::LeafVersion;
 use bitcoin::{
     secp256k1, CompressedPublicKey, Script, ScriptBuf, TapLeafHash, Transaction, TxOut,
     WitnessProgram, XOnlyPublicKey,
 };
 use bitcoin_scriptexec::{
-    execute_script_with_witness_and_tx_template, Exec, ExecCtx, Options, TxTemplate,
+    execute_script_with_witness_and_tx_template_with_options, Exec, ExecCtx, Options, TxTemplate,
 };
 
 pub struct P2WPKHChecker;
@@ -184,10 +185,21 @@ impl P2TRChecker {
             )),
         };
 
-        let exec_result = execute_script_with_witness_and_tx_template(
+        let options = if control_block.leaf_version == LeafVersion::from_consensus(0xc2).unwrap() {
+            let mut opts = Options::default();
+            opts.experimental.op_mul = true;
+            opts.experimental.op_mod = true;
+            opts.enforce_stack_limit = false;
+            opts
+        } else {
+            Options::default()
+        };
+
+        let exec_result = execute_script_with_witness_and_tx_template_with_options(
             ScriptBuf::from_bytes(script_buf),
             tx_template,
             witness,
+            options,
         );
         if !exec_result.success {
             println!("{:?}", exec_result.stats);
